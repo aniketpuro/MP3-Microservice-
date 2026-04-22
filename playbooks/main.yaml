@@ -1,27 +1,45 @@
-- name: Install microk8s
-  hosts: all
+---
+- hosts: [master, workers]
+  name: Install microk8s
   become: true
   tasks:
-    - name: Install microk8s using snap (shell mode)
-      ansible.builtin.shell: |
-        snap install microk8s --classic
-      register: snap_result
-      changed_when: "'installed' in snap_result.stdout"
+  - name: Install microk8s using snap
+    community.general.snap:
+      name: microk8s
+      state: present
+      classic: yes
 
-    - name: Wait for microk8s to be ready
-      ansible.builtin.shell: microk8s status --wait-ready
-      changed_when: false
+- hosts: master
+  name: Initialize cluster
+  become: true
+  roles:
+  - { role: microk8s, tags: microk8s }
 
-    - name: Add user to microk8s group
-      ansible.builtin.user:
-        name: ubuntu
-        groups: microk8s
-        append: true
+- hosts: master
+  name: Install Helm
+  become: true
+  roles:
+  - { role: helm-setup, tags: "helm-setup" }
 
-    - name: Change ownership of .kube directory
-      ansible.builtin.file:
-        path: /home/ubuntu/.kube
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        recurse: true
+- hosts: workers
+  name: Join workers to the cluster
+  become: true
+  serial: 1
+  roles:
+  - { role: join-workers, tags: join-workers }
+
+- hosts: master
+  name: Deploy microservices
+  roles:
+  - { role: deploy-microservices, tags: deploy-microservices }
+
+#---------- Local
+- hosts: localhost
+  name: change private ip to public ip in kubeconfig
+  tasks:
+    - name: change private ip to public ip in kubeconfig
+      ansible.builtin.lineinfile:
+        path: "{{ playbook_dir }}/../kube/config"
+        regexp: '    server: https://.*'
+        line: "    server: https://{{ hostvars[groups['master'][0]].ansible_host }}:16443"
+      become: false
