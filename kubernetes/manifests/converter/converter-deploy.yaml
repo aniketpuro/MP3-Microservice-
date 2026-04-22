@@ -23,11 +23,20 @@ spec:
       containers:
         - name: converter
           image: aniketpuro/converter-microservices1
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: converter-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: converter-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
           envFrom:
             - configMapRef:
                 name: converter-cm
-            - secretRef:
-                name: converter-secret
           resources:
             requests:
               cpu: "50m"

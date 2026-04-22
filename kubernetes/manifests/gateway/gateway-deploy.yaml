@@ -24,11 +24,20 @@ spec:
           image: aniketpuro/gateway-microservices1:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
           envFrom:
             - configMapRef:
                 name: gateway-cm
-            - secretRef:
-                name: gateway-secret
           resources:
             requests:
               cpu: "50m"
