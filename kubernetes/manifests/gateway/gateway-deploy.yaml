@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: adityadocs/gateway-microservices1:latest
+          image: aniketpuro/gateway-microservices1:latest
           ports:
             - containerPort: 8080
           envFrom:

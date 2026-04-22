@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: converter
-          image: adityadocs/converter-microservices1
+          image: aniketpuro/converter-microservices1
           envFrom:
             - configMapRef:
                 name: converter-cm

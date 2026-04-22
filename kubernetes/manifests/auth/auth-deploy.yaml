@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: adityadocs/auth-microservices1:latest
+          image: aniketpuro/auth-microservices1:latest
           ports:
             - containerPort: 5000
           envFrom:
