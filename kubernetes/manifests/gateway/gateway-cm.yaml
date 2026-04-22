@@ -7,3 +7,4 @@ metadata:
     project: microservices_mp4-to-mp3-converter
 data:
   AUTH_SVC_ADDRESS: "auth:5000"
+  MONGO_HOST: "mongodb"

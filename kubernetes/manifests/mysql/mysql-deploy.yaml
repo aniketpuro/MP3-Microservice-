@@ -25,9 +25,19 @@ spec:
             limits:
               cpu: "500m"
               memory: "1Gi"
-          envFrom:
-            - secretRef:
-                name: mysql-secret
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: root_password
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql_password
+            - name: MYSQL_DATABASE
+              value: auth
           ports:
             - containerPort: 3306
               name: mysql
