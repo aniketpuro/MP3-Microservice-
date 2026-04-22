@@ -26,8 +26,12 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "80m"
+        env:
+          - name: EMAIL_PASS
+            valueFrom:
+              secretKeyRef:
+                name: notification-secret
+                key: GMAIL_PASSWORD
         envFrom:
-          - secretRef:
-              name: notication-email-secret
           - configMapRef:
               name: notification-cm

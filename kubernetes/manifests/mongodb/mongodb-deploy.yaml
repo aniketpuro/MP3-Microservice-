@@ -32,9 +32,17 @@ spec:
               cpu: "500m"
           ports:
             - containerPort: 27017
-          envFrom:
-            - secretRef:
-                name: mongodb-secret
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo_initdb_root_username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo_initdb_root_password
           volumeMounts:
             - mountPath: /data/db
               name: mongodb-pv
