@@ -9,6 +9,7 @@ import { IoIosRemoveCircle } from 'react-icons/io'
 import styled from 'styled-components'
 import axios from 'axios'
 import FormError from '@/components/FormErrorMessage'
+import { useUpload } from '@/lib/UploadContext'
 
 const getColor = (props: any) => {
   if (props.isDragAccept) {
@@ -42,10 +43,10 @@ const Container = styled.div`
 `
 
 export default function Home() {
-  const [loading, setLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginStatusMessage, setLoginStatusMessage] = useState('')
   const [isFileUploaded, setIsFileUploaded] = useState(false)
+  const { uploadFile } = useUpload()
 
   const {
     handleSubmit,
@@ -63,8 +64,6 @@ export default function Home() {
     acceptedFiles,
   } = useDropzone({ accept: { 'video/*': ['.mp4', '.mkv'] }, maxFiles: 1 })
 
-  console.log(acceptedFiles)
-
   useEffect(() => {
     const loginStatus = getLoginStatus()
     setIsLoggedIn(loginStatus.loggedIn)
@@ -79,7 +78,6 @@ export default function Home() {
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     try {
-      setLoading(true)
       setIsFileUploaded(false)
 
       if (acceptedFiles.length == 0) {
@@ -90,35 +88,21 @@ export default function Home() {
         return
       }
 
-      console.log(acceptedFiles[0].name)
-      console.log(typeof acceptedFiles[0].name)
       const gatewayIP = (await axios.get('/api/server')).data
-      const response = await axios.post(
-        '/api/upload',
-        {
-          file: acceptedFiles[0],
-          gatewayIP,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      console.log(response)
-      if (response.status == 200) {
-        setIsFileUploaded(true)
-        acceptedFiles.splice(0, 1)
-      }
+      
+      // Call the global upload function (async but we don't need to await 
+      // its full completion here if we want to show "started" immediately)
+      uploadFile(acceptedFiles[0], gatewayIP)
+      
+      setIsFileUploaded(true)
+      acceptedFiles.splice(0, 1)
+      
     } catch (error: any) {
       console.error(error)
       setError('file', {
         type: 'manual',
-        message: error.response.data,
+        message: error.response?.data || 'An error occurred during upload initialization',
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -155,6 +139,8 @@ export default function Home() {
                 className="inline-block text-xl ml-2 text-red-600 cursor-pointer"
                 onClick={() => {
                   acceptedFiles.splice(0, 1)
+                  // Instead of reload, just clear acceptedFiles if possible 
+                  // or handle state properly. For now keeping it simple.
                   location.reload()
                 }}
               />
@@ -163,7 +149,7 @@ export default function Home() {
         ) : (
           <span className="text-green-500 flex items-center">
             <FaCheckCircle className="inline-block mr-1 font-bold" />
-            File uploaded successfully
+            Upload started!
           </span>
         )}
       </div>
@@ -171,7 +157,7 @@ export default function Home() {
       <a href="/download" className="text-sm text-cyan-500 hover:underline">
         Download file?
       </a>
-      <Button loading={loading} text="Upload" type="submit" />
+      <Button loading={false} text="Upload" type="submit" />
     </form>
   )
 }
