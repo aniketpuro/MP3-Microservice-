@@ -4,10 +4,10 @@
   become: true
   tasks:
   - name: Install microk8s using snap
-    community.general.snap:
-      name: microk8s
-      state: present
-      classic: yes
+    ansible.builtin.shell: snap install microk8s --classic
+    register: microk8s_install
+    changed_when: "'already installed' not in microk8s_install.stderr"
+    failed_when: microk8s_install.rc != 0 and 'already installed' not in microk8s_install.stderr
 
 - hosts: master
   name: Initialize cluster
