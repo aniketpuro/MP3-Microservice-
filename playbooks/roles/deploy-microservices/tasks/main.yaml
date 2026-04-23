@@ -1,17 +1,17 @@
 - name: Clone git repository
   ansible.builtin.git:
     repo: https://github.com/aniketpuro/MP3-Microservice-
-    dest: "{{ ansible_env.HOME }}/MP3-Microservice-"
+    dest: "{{ ansible_facts['env']['HOME'] }}/MP3-Microservice-"
     clone: yes
     force: yes  
 
 - name: Create all sealed secrets
   shell: |
-    kubectl apply -f {{ ansible_env.HOME }}/MP3-Microservice-/kubernetes/secrets/
+    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/secrets/
 
 - name: Deploy rabbitmq, mysql, mongodb
   shell: |
-    kubectl apply -f {{ ansible_env.HOME }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
+    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
   loop:
     - rabbit
     - mysql
@@ -28,7 +28,7 @@
 
 - name: Deploy microservices (Auth, Notification, Converter, Gateway, Frontend)
   shell: |
-    kubectl apply -f {{ ansible_env.HOME }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
+    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
   loop:
     - auth
     - notification
