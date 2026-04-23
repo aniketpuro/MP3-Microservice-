@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import NavBar from '@/components/NavBar'
+import { UploadProvider } from '@/lib/UploadContext'
+import UploadStatus from '@/components/UploadStatus'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,10 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex items-center flex-col justify-center w-full bg-cyan-950 min-h-full p-5 bg-opacity-85">
-          <NavBar />
-          {children}
-        </div>
+        <UploadProvider>
+          <div className="flex items-center flex-col justify-center w-full bg-cyan-950 min-h-full p-5 bg-opacity-85">
+            <NavBar />
+            {children}
+            <UploadStatus />
+          </div>
+        </UploadProvider>
       </body>
     </html>
   )
