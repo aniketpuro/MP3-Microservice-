@@ -27,6 +27,11 @@ spec:
             memory: "64Mi"
             cpu: "80m"
         env:
+          - name: EMAIL_USER
+            valueFrom:
+              secretKeyRef:
+                name: notification-secret
+                key: GMAIL_ADDRESS
           - name: EMAIL_PASS
             valueFrom:
               secretKeyRef:
