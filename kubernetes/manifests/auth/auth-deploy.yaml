@@ -24,11 +24,25 @@ spec:
           image: aniketpuro/auth-microservices1:latest
           ports:
             - containerPort: 5000
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql_password
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: root_password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: JWT_SECRET
           envFrom:
             - configMapRef:
                 name: auth-cm
-            - secretRef:
-                name: auth-secret
           resources:
             requests:
               memory: "64Mi"
