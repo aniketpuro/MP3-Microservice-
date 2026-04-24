@@ -1,6 +1,6 @@
 # Stage 1: Build
 
-FROM python:3.12-slim-bullseye AS build
+FROM python:3.12-slim-bookworm AS build
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r ./requirements.txt
 
 # Stage 2: Run
 
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-bookworm
 
 RUN apt-get update \
 && apt-get install -y --no-install-recommends --no-install-suggests default-libmysqlclient-dev
