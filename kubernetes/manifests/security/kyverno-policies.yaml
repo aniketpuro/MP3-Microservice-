@@ -27,26 +27,61 @@ spec:
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: require-ro-rootfs
+  name: require-security-context
   annotations:
-    policies.kyverno.io/title: Require Read-Only Root Filesystem
+    policies.kyverno.io/title: Require Pod Security Context
     policies.kyverno.io/description: >-
-      Restricting the root filesystem to read-only prevents attackers from 
-      modifying the container's executable files.
+      Enforces Pod Security Standards by requiring non-root users and 
+      dropping all capabilities.
 spec:
-  validationFailureAction: Audit # Set to Enforce after testing
+  validationFailureAction: Enforce
   background: true
   rules:
-    - name: check-ro-rootfs
+    - name: check-security-context
       match:
         any:
         - resources:
             kinds:
               - Pod
       validate:
-        message: "Root filesystem must be read-only."
+        message: "Pod must have runAsNonRoot set to true and drop all capabilities."
         pattern:
           spec: # nosemgrep
+            securityContext:
+              runAsNonRoot: true
             containers:
               - securityContext:
-                  readOnlyRootFilesystem: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-image-signature
+  annotations:
+    policies.kyverno.io/title: Verify Image Signature
+    policies.kyverno.io/description: >-
+      Ensures that only images signed with the trusted cosign key are allowed.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: verify-signature
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      verifyImages:
+        - imageReferences:
+            - "aniketpuro/*"
+          attestors:
+            - entries:
+                - keys:
+                    publicKeys: |
+                      -----BEGIN PUBLIC KEY-----
+                      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP99Iof+V7oGvK8YFv6lV4jK3+nZ+
+                      y2Q5uD4t2C7p3vH6v+9yQZJ8f7lR3u5Y5+oJ6lO6U5L7E9vW9I6/l2+v5w==
+                      -----END PUBLIC KEY-----
