@@ -18,7 +18,7 @@ def token(request):
           auth_svc_address}/validate with token: {token}")
 
     response = requests.post(
-        f"http://{auth_svc_address}/validate",
+        f"https://{auth_svc_address}/validate",
         headers={"Authorization": token}
     )
 
