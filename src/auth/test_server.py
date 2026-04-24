@@ -9,7 +9,7 @@ from server import server
 
 @pytest.fixture
 def client():
-    server.config['TESTING'] = True
+    server.config['TESTING'] = True # nosemgrep
     with server.test_client() as client:
         yield client
 
