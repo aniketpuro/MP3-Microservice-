@@ -4,8 +4,11 @@ from flask_mysqldb import MySQL
 import jwt
 from datetime import datetime, timezone, timedelta
 from prometheus_flask_exporter import PrometheusMetrics
+from waitress import serve
+from flask_talisman import Talisman
 
 server = Flask(__name__)
+Talisman(server, content_security_policy=None)
 metrics = PrometheusMetrics(server)
 # Static information as metric
 metrics.info('app_info', 'Auth Service', version='1.0.0')
@@ -78,7 +81,11 @@ def validate():
         decoded = jwt.decode(
             encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]
         )
-    except:
+    except jwt.ExpiredSignatureError:
+        return "token expired", 403
+    except jwt.InvalidTokenError:
+        return "not authorized", 403
+    except Exception:
         return "not authorized", 403
 
     return decoded, 200
@@ -98,4 +105,4 @@ def createJWT(username, secret, is_admin):
 
 
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=5000)
+    serve(server, host="0.0.0.0", port=5000)

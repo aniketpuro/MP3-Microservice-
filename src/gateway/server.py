@@ -6,12 +6,15 @@ from flask import Flask, request, send_file
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from prometheus_flask_exporter import PrometheusMetrics
+from waitress import serve
+from flask_talisman import Talisman
 from auth import validate
 from auth_svc import access
 from storage import utils
 from bson.objectid import ObjectId
 
 server = Flask(__name__)
+Talisman(server, content_security_policy=None)
 metrics = PrometheusMetrics(server)
 metrics.info('app_info', 'Gateway Service', version='1.0.0')
 CORS(server)
@@ -115,4 +118,4 @@ def download():
 
 
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=8080)
+    serve(server, host="0.0.0.0", port=8080)
