@@ -1,4 +1,4 @@
-resource "aws_instance" "workers" { # nosemgrep: terraform.aws.security.aws-ec2-has-public-ip.aws-ec2-has-public-ip
+resource "aws_instance" "workers" {
   ami             = var.default_ami_id
   count           = var.worker_count
   instance_type   = var.instance_type

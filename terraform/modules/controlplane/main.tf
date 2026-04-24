@@ -1,4 +1,4 @@
-resource "aws_instance" "controlplane" { # nosemgrep: terraform.aws.security.aws-ec2-has-public-ip.aws-ec2-has-public-ip
+resource "aws_instance" "controlplane" {
   ami             = var.default_ami_id
   instance_type   = var.instance_type
   key_name        = var.key_pair_name
