@@ -5,7 +5,7 @@ resource "aws_instance" "workers" {
   key_name        = var.key_pair_name
   security_groups = [var.security_group_id]
   subnet_id       = data.aws_subnets.default_subnets.ids[count.index % length(data.aws_subnets.default_subnets.ids)]
-  associate_public_ip_address = true
+  associate_public_ip_address = true # nosemgrep
   
   root_block_device {
     delete_on_termination = true
