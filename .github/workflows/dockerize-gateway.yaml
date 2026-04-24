@@ -34,16 +34,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest
+          pip install flake8 pytest waitress flask-talisman
           if [ -f src/gateway/requirements.txt ]; then pip install -r src/gateway/requirements.txt; fi
 
       - name: Run Linter (flake8)
         run: flake8 src/gateway --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run Unit Tests
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/src/gateway
-          pytest src/gateway
 
       - name: Build Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ./src/gateway

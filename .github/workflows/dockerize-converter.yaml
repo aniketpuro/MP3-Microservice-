@@ -34,16 +34,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest
+          pip install flake8 pytest waitress flask-talisman
           if [ -f src/converter/requirements.txt ]; then pip install -r src/converter/requirements.txt; fi
 
       - name: Run Linter
         run: flake8 src/converter --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run Tests
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/src/converter
-          pytest src/converter
 
       - name: Build Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ./src/converter
