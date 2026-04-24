@@ -59,6 +59,7 @@ jobs:
           image: ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
           artifact-name: sbom-gateway-${{ env.COMMIT_SHA }}.json
           output-format: json
+          output-file: sbom-gateway-${{ env.COMMIT_SHA }}.json
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
@@ -84,8 +85,10 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           echo "$COSIGN_PRIVATE_KEY" > cosign.key
+          # Sign the image
           cosign sign --key cosign.key ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
-          cosign attach sbom --sbom sbom-gateway-${{ env.COMMIT_SHA }}.json ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+          # Attest the SBOM
+          cosign attest --key cosign.key --predicate sbom-gateway-${{ env.COMMIT_SHA }}.json --type spdxjson ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
           rm cosign.key
 
       - name: Update Kustomize
