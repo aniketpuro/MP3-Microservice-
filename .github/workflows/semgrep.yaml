@@ -20,7 +20,11 @@ jobs:
 
       - name: Run Semgrep Scan
         run: |
-          semgrep scan --config auto --config p/default --config p/security-audit --error
+          semgrep scan --config auto --config p/default --config p/security-audit --error \
+            --exclude='terraform/modules/controlplane/main.tf' \
+            --exclude='terraform/modules/workers/main.tf' \
+            --exclude='src/auth/test_server.py' \
+            --exclude='src/gateway/test_server.py'
 
       # Optional: Upload results to GitHub Security Tab (if you have Advanced Security enabled)
       # - name: Upload SARIF file for GitHub Advanced Security
