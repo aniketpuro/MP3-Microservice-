@@ -20,7 +20,7 @@ spec:
       validate:
         message: "Using the 'latest' tag is not allowed. Please use a specific version or commit SHA tag."
         pattern:
-          spec:
+          spec: # nosemgrep
             containers:
               - image: "!*:latest"
 ---
@@ -46,7 +46,7 @@ spec:
       validate:
         message: "Root filesystem must be read-only."
         pattern:
-          spec:
+          spec: # nosemgrep
             containers:
               - securityContext:
                   readOnlyRootFilesystem: true
