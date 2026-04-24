@@ -11,7 +11,7 @@ def login(request):
     basic_auth = (auth.username, auth.password)
     auth_svc_address = os.environ.get("AUTH_SVC_ADDRESS")
     response = requests.post(
-        f"http://{auth_svc_address}/login",
+        f"https://{auth_svc_address}/login",
         auth=basic_auth
     )
     print("response:", response)
@@ -32,7 +32,7 @@ def register(request):
     basic_auth = (auth.username, auth.password)
     auth_svc_address = os.environ.get("AUTH_SVC_ADDRESS")
     response = requests.post(
-        f"http://{auth_svc_address}/register",
+        f"https://{auth_svc_address}/register",
         auth=basic_auth
     )
     print("response:", response)
