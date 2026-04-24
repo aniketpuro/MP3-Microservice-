@@ -1,0 +1,52 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-image-tag
+  annotations:
+    policies.kyverno.io/title: Restrict Image Tags
+    policies.kyverno.io/description: >-
+      Using the 'latest' tag is a bad practice. This policy ensures
+      that all images use a specific tag or digest.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-image-tag
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Using the 'latest' tag is not allowed. Please use a specific version or commit SHA tag."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-ro-rootfs
+  annotations:
+    policies.kyverno.io/title: Require Read-Only Root Filesystem
+    policies.kyverno.io/description: >-
+      Restricting the root filesystem to read-only prevents attackers from 
+      modifying the container's executable files.
+spec:
+  validationFailureAction: Audit # Set to Enforce after testing
+  background: true
+  rules:
+    - name: check-ro-rootfs
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Root filesystem must be read-only."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true

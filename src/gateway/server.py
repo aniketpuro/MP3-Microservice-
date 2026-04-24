@@ -5,12 +5,15 @@ import json
 from flask import Flask, request, send_file
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from prometheus_flask_exporter import PrometheusMetrics
 from auth import validate
 from auth_svc import access
 from storage import utils
 from bson.objectid import ObjectId
 
 server = Flask(__name__)
+metrics = PrometheusMetrics(server)
+metrics.info('app_info', 'Gateway Service', version='1.0.0')
 CORS(server)
 
 mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")

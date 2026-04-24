@@ -3,8 +3,12 @@ from flask import Flask, request
 from flask_mysqldb import MySQL
 import jwt
 from datetime import datetime, timezone, timedelta
+from prometheus_flask_exporter import PrometheusMetrics
 
 server = Flask(__name__)
+metrics = PrometheusMetrics(server)
+# Static information as metric
+metrics.info('app_info', 'Auth Service', version='1.0.0')
 
 # configurations
 server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
