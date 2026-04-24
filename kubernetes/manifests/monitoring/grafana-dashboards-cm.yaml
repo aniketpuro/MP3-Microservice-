@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ultimate-observability-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  master-dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "panels": [],
+          "title": "SYSTEM OVERVIEW (NODES & CLUSTER)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 70 },
+                  { "color": "red", "value": 90 }
+                ]
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "targets": [
+            { "expr": "sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes) * 100", "refId": "A" }
+          ],
+          "title": "Cluster Memory Usage",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "id": 3,
+          "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            { "expr": "sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) / sum(count(node_cpu_seconds_total{mode=\"idle\"})) * 100", "refId": "A" }
+          ],
+          "title": "Cluster CPU Usage",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 10,
+          "panels": [],
+          "title": "MICROSERVICES PERFORMANCE (GOLDEN SIGNALS)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "id": 11,
+          "options": { "legend": { "displayMode": "table", "placement": "right" } },
+          "targets": [
+            { "expr": "sum by (app) (rate(flask_http_request_duration_seconds_sum[5m]) / rate(flask_http_request_duration_seconds_count[5m]))", "legendFormat": "{{app}} Latency", "refId": "A" }
+          ],
+          "title": "Average Request Latency (seconds)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "id": 12,
+          "targets": [
+            { "expr": "sum by (app) (rate(flask_http_request_duration_seconds_count[5m]))", "legendFormat": "{{app}} RPS", "refId": "A" }
+          ],
+          "title": "Traffic (Requests Per Second)",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 20,
+          "panels": [],
+          "title": "POD STATUS & RESOURCE QUOTAS",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+          "id": 21,
+          "options": { "showHeader": true },
+          "targets": [
+            { "expr": "sum by (pod, namespace) (kube_pod_container_status_restarts_total)", "legendFormat": "Restarts", "refId": "A" }
+          ],
+          "title": "Pod Restarts (Instability Detection)",
+          "type": "state-timeline"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "id": 30,
+          "panels": [],
+          "title": "NETWORKING & STORAGE",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "id": 31,
+          "targets": [
+            { "expr": "sum(rate(container_network_receive_bytes_total[5m])) by (pod)", "legendFormat": "In: {{pod}}", "refId": "A" },
+            { "expr": "-sum(rate(container_network_transmit_bytes_total[5m])) by (pod)", "legendFormat": "Out: {{pod}}", "refId": "B" }
+          ],
+          "title": "Network I/O per Pod (Bytes/s)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "id": 32,
+          "targets": [
+            { "expr": "sum(kubelet_volume_stats_used_bytes) by (persistentvolumeclaim)", "legendFormat": "{{persistentvolumeclaim}}", "refId": "A" }
+          ],
+          "title": "Storage Usage (PVC)",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": ["enterprise", "devsecops", "kubernetes"],
+      "templating": { "list": [] },
+      "time": { "from": "now-3h", "to": "now" },
+      "title": "ULTIMATE ENTERPRISE OBSERVABILITY DASHBOARD",
+      "uid": "ultimate-observability",
+      "version": 2
+    }
