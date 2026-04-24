@@ -1,29 +1,123 @@
-name: Build and Push (Auth)
+name: Auth Service CI/CD
+
 on:
-    workflow_dispatch:
-    push:
-        branches:
-            - main
-        paths:
-            - "src/auth/**"
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/auth/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/auth/**'
+
+env:
+  IMAGE_NAME: aniketpuro/auth-service
+
 jobs:
-    build-push:
-        runs-on: ubuntu-latest
-        steps:
-            -
-                name: Checkout code
-                uses: actions/checkout@v4
-            -   
-                name: Login to Docker Hub
-                uses: docker/login-action@v3
-                with:
-                    username: ${{ secrets.DOCKERHUB_USERNAME }}
-                    password: ${{ secrets.DOCKERHUB_TOKEN }}
-            -
-                name: Build and Push
-                uses: docker/build-push-action@v6
-                with:
-                    context: ./src/auth
-                    tags: ${{ secrets.DOCKERHUB_USERNAME }}/auth-microservices1:latest
-                    push: true
-          
+  build-test-and-scan:
+    name: Build, Test, and Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Short Commit SHA
+        id: vars
+        run: echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if [ -f src/auth/requirements.txt ]; then pip install -r src/auth/requirements.txt; fi
+
+      - name: Run Linter (flake8)
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 src/auth --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 src/auth --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Unit Tests
+        run: |
+          echo "Starting Unit Tests for Auth Service..."
+          # We'll create a basic test file next
+          pytest src/auth
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ./src/auth
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+          artifact-name: sbom-auth-${{ env.COMMIT_SHA }}.json
+          output-format: json
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Image
+        if: github.event_name == 'push'
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Sign Image and Attach SBOM
+        if: github.event_name == 'push'
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          # Sign the image
+          echo "$COSIGN_PRIVATE_KEY" > cosign.key
+          cosign sign --key cosign.key ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
+
+          # Attach SBOM to the image in registry
+          cosign attach sbom --sbom sbom-auth-${{ env.COMMIT_SHA }}.json ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+
+          # Clean up
+          rm cosign.key
+
+
+      - name: Update Kustomize Image Tag
+        if: github.event_name == 'push'
+        run: |
+          cd kubernetes/manifests/auth
+          kustomize edit set image ${{ env.IMAGE_NAME }}=${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+
+      - name: Commit and Push Changes (GitOps)
+        if: github.event_name == 'push'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add kubernetes/manifests/auth/kustomization.yaml
+          git commit -m "Update auth image tag to ${{ env.COMMIT_SHA }} [skip ci]"
+          git push
