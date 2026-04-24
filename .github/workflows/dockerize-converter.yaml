@@ -41,7 +41,9 @@ jobs:
         run: flake8 src/converter --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run Tests
-        run: pytest src/converter
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src/converter
+          pytest src/converter
 
       - name: Build Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ./src/converter

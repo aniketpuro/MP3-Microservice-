@@ -41,7 +41,9 @@ jobs:
         run: flake8 src/notification --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run Tests
-        run: pytest src/notification
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src/notification
+          pytest src/notification
 
       - name: Build Docker Image
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} ./src/notification
