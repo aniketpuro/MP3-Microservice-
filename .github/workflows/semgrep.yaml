@@ -20,9 +20,7 @@ jobs:
 
       - name: Run Semgrep Scan
         run: |
-          semgrep scan --config auto --config p/security-optimized --config p/owasp-top-10 --error
-        env:
-          SEMGREP_RULES: p/security-optimized p/owasp-top-10
+          semgrep scan --config auto --config p/default --config p/security-audit --error
 
       # Optional: Upload results to GitHub Security Tab (if you have Advanced Security enabled)
       # - name: Upload SARIF file for GitHub Advanced Security
