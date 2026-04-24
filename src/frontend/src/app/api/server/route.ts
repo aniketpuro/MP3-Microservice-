@@ -10,7 +10,7 @@ function getGatewayUrl() {
         reject(err)
       } else {
         console.log('Address: ', address)
-        const gatewayUrl = `http://${address}`
+        const gatewayUrl = `https://${address}`
         resolve(gatewayUrl)
       }
     })
@@ -20,5 +20,5 @@ function getGatewayUrl() {
 export async function GET(request: NextRequest) {
   unstable_noStore()
   const gatewayUrl = (await getGatewayUrl()) as string
-  return new Response('http://gateway-service:8080', { status: 200 })
+  return new Response('https://gateway-service:8080', { status: 200 })
 }
