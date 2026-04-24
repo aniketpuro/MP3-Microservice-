@@ -18,9 +18,19 @@ spec:
         app: rabbitmq
         project: microservices_mp4-to-mp3-converter
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       containers:
       - name: rabbitmq
         image: rabbitmq:3-management
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         ports:
         - containerPort: 15672
           name: http
