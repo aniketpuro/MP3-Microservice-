@@ -53,13 +53,14 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Generate SBOM (Syft)
-        uses: anchore/sbom-action@v0
-        with:
-          image: ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
-          artifact-name: sbom-notification-${{ env.COMMIT_SHA }}.json
-          output-format: json
-          output-file: sbom-notification-${{ env.COMMIT_SHA }}.json
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: |
+          syft ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} -o json > sbom-notification-${{ env.COMMIT_SHA }}.json
+          ls -l sbom-notification-${{ env.COMMIT_SHA }}.json
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
