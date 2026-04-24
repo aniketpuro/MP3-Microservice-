@@ -16,9 +16,20 @@ spec:
         app: notification
         project: microservices_mp4-to-mp3-converter
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       containers:
       - name: notification
         image: aniketpuro/notification-microservices1:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             memory: "64Mi"

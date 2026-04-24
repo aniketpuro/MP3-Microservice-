@@ -29,10 +29,16 @@ FROM node:22-alpine3.20
 
 WORKDIR /app
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+# Set correct permissions for the node user
+RUN chown -R node:node /app
+
+COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./
+
+# Switch to the non-root user
+USER node
 
 CMD [ "npm", "run", "start" ]
 

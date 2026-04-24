@@ -20,9 +20,20 @@ spec:
         app: converter
         project: microservices_mp4-to-mp3-converter
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       containers:
         - name: converter
           image: aniketpuro/converter-microservices1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
