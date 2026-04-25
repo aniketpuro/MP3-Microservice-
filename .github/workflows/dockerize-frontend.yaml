@@ -106,23 +106,49 @@ jobs:
           set -euo pipefail
           git config --local user.email "aniketpurohit851@gmail.com"
           git config --local user.name "aniketpuro"
-          
-          # Ensure we're on main and up-to-date BEFORE modifying files
-          git fetch origin main
-          git checkout main
-          git pull --rebase origin main
 
-          cd kubernetes/manifests/frontend
-          kustomize edit set image ${{ env.IMAGE_NAME }}=${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
-          cd -
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          SUCCESS=false
 
-          git add kubernetes/manifests/frontend/kustomization.yaml
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT+1)) of $MAX_RETRIES..."
+            
+            # Fetch and pull the latest changes using rebase
+            git fetch origin main
+            git checkout main
+            git pull --rebase origin main
 
-          # Only commit if there is an actual change
-          if git diff --cached --quiet; then
-            echo "No kustomize changes to commit."
-            exit 0
+            # Apply the 'kustomize edit' change
+            cd kubernetes/manifests/frontend
+            kustomize edit set image ${{ env.IMAGE_NAME }}=${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
+            cd -
+
+            # Stage the change
+            git add kubernetes/manifests/frontend/kustomization.yaml
+
+            # Commit the change (only if there is a difference)
+            if git diff --cached --quiet; then
+              echo "No kustomize changes to commit."
+              SUCCESS=true
+              break
+            fi
+
+            git commit -m "Update frontend image tag to ${{ env.COMMIT_SHA }} [skip ci]"
+
+            # Attempt to push the changes
+            if git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main; then
+              echo "Push successful!"
+              SUCCESS=true
+              break
+            else
+              echo "Push failed. Retrying in 5 seconds..."
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              sleep 5
+            fi
+          done
+
+          if [ "$SUCCESS" = false ]; then
+            echo "Failed to push changes after $MAX_RETRIES attempts."
+            exit 1
           fi
-
-          git commit -m "Update frontend image tag to ${{ env.COMMIT_SHA }} [skip ci]"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
