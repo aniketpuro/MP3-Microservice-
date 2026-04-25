@@ -1,0 +1,240 @@
+name: Services CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/auth/**"
+      - "src/converter/**"
+      - "src/frontend/**"
+      - "src/gateway/**"
+      - "src/notification/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/auth/**"
+      - "src/converter/**"
+      - "src/frontend/**"
+      - "src/gateway/**"
+      - "src/notification/**"
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-and-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: auth
+            image: aniketpuro/auth-service
+            context: ./src/auth
+            manifest: auth
+            language: python
+          - name: converter
+            image: aniketpuro/converter-service
+            context: ./src/converter
+            manifest: converter
+            language: python
+          - name: frontend
+            image: aniketpuro/frontend-service
+            context: ./src/frontend
+            manifest: frontend
+            language: node
+          - name: gateway
+            image: aniketpuro/gateway-service
+            context: ./src/gateway
+            manifest: gateway
+            language: python
+          - name: notification
+            image: aniketpuro/notification-service
+            context: ./src/notification
+            manifest: notification
+            language: python
+
+    env:
+      SERVICE_NAME: ${{ matrix.service.name }}
+      IMAGE_NAME: ${{ matrix.service.image }}
+      SERVICE_CONTEXT: ${{ matrix.service.context }}
+      MANIFEST_NAME: ${{ matrix.service.manifest }}
+      SERVICE_LANG: ${{ matrix.service.language }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set short commit SHA
+        run: echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        if: matrix.service.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        if: matrix.service.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest waitress flask-talisman
+          if [ -f "${SERVICE_CONTEXT}/requirements.txt" ]; then
+            pip install -r "${SERVICE_CONTEXT}/requirements.txt"
+          fi
+
+      - name: Lint Python service
+        if: matrix.service.language == 'python'
+        run: |
+          flake8 "${SERVICE_CONTEXT}" --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 "${SERVICE_CONTEXT}" --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Set up Node.js
+        if: matrix.service.language == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        if: matrix.service.language == 'node'
+        run: npm install --force
+        working-directory: ./src/frontend
+
+      - name: Lint frontend
+        if: matrix.service.language == 'node'
+        run: npm run lint
+        working-directory: ./src/frontend
+
+      - name: Build frontend
+        if: matrix.service.language == 'node'
+        run: npm run build
+        working-directory: ./src/frontend
+
+      - name: Build Docker image
+        run: docker build -t "${IMAGE_NAME}:${COMMIT_SHA}" "${SERVICE_CONTEXT}"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+      - name: Install Syft
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: |
+          syft "docker:${IMAGE_NAME}:${COMMIT_SHA}" -o spdx-json > "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json"
+          if [ ! -s "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" ]; then
+            echo "SBOM file is empty or not created"
+            exit 1
+          fi
+          ls -l "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push image and capture digest
+        if: github.event_name == 'push'
+        run: |
+          docker push "${IMAGE_NAME}:${COMMIT_SHA}"
+          docker tag "${IMAGE_NAME}:${COMMIT_SHA}" "${IMAGE_NAME}:latest"
+          docker push "${IMAGE_NAME}:latest"
+          DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}:${COMMIT_SHA}")"
+          if [ -z "${DIGEST}" ]; then
+            echo "Failed to resolve image digest after push"
+            exit 1
+          fi
+          echo "IMAGE_DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+          echo "Using digest ${DIGEST} for cosign"
+
+      - name: Sign image and attach SBOM
+        if: github.event_name == 'push'
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${COSIGN_PRIVATE_KEY}" > cosign.key
+          cosign sign --key cosign.key "${IMAGE_DIGEST}" --yes
+          if [ -f "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" ]; then
+            cosign attest --key cosign.key --predicate "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" --type spdxjson "${IMAGE_DIGEST}" --yes
+          else
+            echo "SBOM file missing, skipping attestation"
+          fi
+          rm -f cosign.key
+
+      - name: Update Kustomize + Commit + Push (GitOps)
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git config --local user.email "aniketpurohit851@gmail.com"
+          git config --local user.name "aniketpuro"
+
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          SUCCESS=false
+          TARGET_FILE="kubernetes/manifests/${MANIFEST_NAME}/kustomization.yaml"
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+
+            git fetch origin main
+            git checkout main
+            git pull --rebase origin main
+
+            cd "kubernetes/manifests/${MANIFEST_NAME}"
+            kustomize edit set image "${IMAGE_NAME}=${IMAGE_NAME}:${COMMIT_SHA}"
+            cd -
+
+            git add "${TARGET_FILE}"
+
+            if git diff --cached --quiet; then
+              echo "No kustomize changes to commit."
+              SUCCESS=true
+              break
+            fi
+
+            if git commit -m "Update ${SERVICE_NAME} image tag to ${COMMIT_SHA} [skip ci]"; then
+              echo "Commit created."
+            else
+              if git diff --cached --quiet; then
+                echo "Nothing to commit after refresh; repository was likely updated by another pipeline."
+                SUCCESS=true
+                break
+              fi
+              echo "git commit failed unexpectedly. Retrying in 5 seconds..."
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              sleep 5
+              continue
+            fi
+
+            if git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:main; then
+              echo "Push successful!"
+              SUCCESS=true
+              break
+            else
+              echo "Push failed. Retrying in 5 seconds..."
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              sleep 5
+            fi
+          done
+
+          if [ "${SUCCESS}" = false ]; then
+            echo "Failed to push changes after ${MAX_RETRIES} attempts."
+            exit 1
+          fi
