@@ -95,7 +95,6 @@ export default function Home() {
       uploadFile(acceptedFiles[0], gatewayIP)
       
       setIsFileUploaded(true)
-      acceptedFiles.splice(0, 1)
       
     } catch (error: any) {
       console.error(error)
@@ -138,9 +137,7 @@ export default function Home() {
               <IoIosRemoveCircle
                 className="inline-block text-xl ml-2 text-red-600 cursor-pointer"
                 onClick={() => {
-                  acceptedFiles.splice(0, 1)
-                  // Instead of reload, just clear acceptedFiles if possible 
-                  // or handle state properly. For now keeping it simple.
+                  // Trigger a fresh upload state and reset dropzone by reload.
                   location.reload()
                 }}
               />

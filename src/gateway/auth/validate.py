@@ -14,8 +14,7 @@ def token(request):
 
     auth_svc_address = os.environ.get("AUTH_SVC_ADDRESS")
 
-    print(f"Sending request to {
-          auth_svc_address}/validate with token: {token}")
+    print(f"Sending request to {auth_svc_address}/validate with token: {token}")
 
     response = requests.post(
         f"https://{auth_svc_address}/validate",
@@ -26,6 +25,5 @@ def token(request):
         print("Token validation successful")
         return response.text, None
     else:
-        print(f"Token validation failed with status code: {
-              response.status_code}")
+        print(f"Token validation failed with status code: {response.status_code}")
         return None, (response.text, response.status_code)

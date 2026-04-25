@@ -24,13 +24,11 @@ mongo_pass = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 mongo_host = os.environ.get("MONGO_HOST")
 
 mongo_video = PyMongo(
-    server, uri=f"mongodb://{mongo_user}:{mongo_pass}@{
-        mongo_host}:27017/videos?authSource=admin"
+    server, uri=f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017/videos?authSource=admin"
 )
 
 mongo_mp3 = PyMongo(
-    server, uri=f"mongodb://{mongo_user}:{mongo_pass}@{
-        mongo_host}:27017/mp3s?authSource=admin"
+    server, uri=f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017/mp3s?authSource=admin"
 )
 
 fs_videos = gridfs.GridFS(mongo_video.db)
