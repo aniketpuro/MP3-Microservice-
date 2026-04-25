@@ -58,13 +58,15 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Generate SBOM (Syft)
-        uses: anchore/sbom-action@v0
-        with:
-          image: ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }}
-          artifact-name: sbom-frontend-${{ env.COMMIT_SHA }}.json
-          output-format: json
-          output-file: sbom-frontend-${{ env.COMMIT_SHA }}.json
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: |
+          syft ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} -o spdx-json > sbom-frontend-${{ env.COMMIT_SHA }}.json
+          if [ ! -s sbom-frontend-${{ env.COMMIT_SHA }}.json ]; then echo "SBOM file is empty or not created"; exit 1; fi
+          ls -l sbom-frontend-${{ env.COMMIT_SHA }}.json
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
@@ -93,7 +95,11 @@ jobs:
           # Sign the image
           cosign sign --key cosign.key ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
           # Attest the SBOM
-          cosign attest --key cosign.key --predicate sbom-frontend-${{ env.COMMIT_SHA }}.json --type spdxjson ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
+          if [ -f sbom-frontend-${{ env.COMMIT_SHA }}.json ]; then
+            cosign attest --key cosign.key --predicate sbom-frontend-${{ env.COMMIT_SHA }}.json --type spdxjson ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} --yes
+          else
+            echo "SBOM file missing, skipping attestation"
+          fi
           rm cosign.key
 
       - name: Update Kustomize
