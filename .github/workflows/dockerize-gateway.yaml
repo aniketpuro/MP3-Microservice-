@@ -15,6 +15,9 @@ on:
 env:
   IMAGE_NAME: aniketpuro/gateway-service
 
+permissions:
+  contents: write
+
 jobs:
   build-test-and-scan:
     runs-on: ubuntu-latest
