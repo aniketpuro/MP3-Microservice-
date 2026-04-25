@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          syft ${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} -o spdx-json > sbom-notification-${{ env.COMMIT_SHA }}.json
+          syft docker:${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHA }} -o spdx-json > sbom-notification-${{ env.COMMIT_SHA }}.json
           if [ ! -s sbom-notification-${{ env.COMMIT_SHA }}.json ]; then echo "SBOM file is empty or not created"; exit 1; fi
           ls -l sbom-notification-${{ env.COMMIT_SHA }}.json
 
