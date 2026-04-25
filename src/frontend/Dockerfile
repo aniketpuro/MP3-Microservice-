@@ -1,16 +1,16 @@
 # Stage 1: Installing Dependencies
 
-FROM node:22-alpine3.20 AS deps
+FROM node:22-alpine3.21 AS deps
 
 WORKDIR /app
 
 COPY package*.json .
 
-RUN npm install
+RUN apk upgrade --no-cache && npm install
 
 # Stage 2: Build App
 
-FROM node:22-alpine3.20 AS builder
+FROM node:22-alpine3.21 AS builder
 
 WORKDIR /app
 
@@ -25,12 +25,12 @@ RUN npm install --omit=dev
 
 # Stage 3: Run
 
-FROM node:22-alpine3.20
+FROM node:22-alpine3.21
 
 WORKDIR /app
 
-# Set correct permissions for the node user
-RUN chown -R node:node /app
+# Bring runtime packages to latest patch level and set ownership.
+RUN apk upgrade --no-cache && chown -R node:node /app
 
 COPY --from=builder --chown=node:node /app/.next ./.next
 COPY --from=builder --chown=node:node /app/public ./public
