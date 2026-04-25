@@ -1,5 +1,6 @@
 name: Auth Service CI/CD
 
+# Triggered refresh to apply latest security and identity fixes
 on:
   push:
     branches:
