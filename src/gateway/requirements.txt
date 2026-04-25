@@ -7,7 +7,7 @@ colorama==0.4.6
 dill==0.3.8
 dnspython==2.6.1
 Flask==3.1.3
-Flask-Cors==4.0.1
+Flask-Cors==4.0.2
 Flask-PyMongo==2.3.0
 idna==3.7
 isort==5.13.2
@@ -23,7 +23,7 @@ pylint==3.2.5
 pymongo==4.8.0
 requests==2.32.3
 tomlkit==0.12.5
-urllib3==2.2.2
+urllib3==2.6.3
 Werkzeug==3.1.6
 prometheus-flask-exporter==0.23.0
 
