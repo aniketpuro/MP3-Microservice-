@@ -115,4 +115,5 @@ jobs:
           git config --local user.name "aniketpuro"
           git add kubernetes/manifests/frontend/kustomization.yaml
           git commit -m "Update frontend image tag to ${{ env.COMMIT_SHA }} [skip ci]"
+          git pull --rebase https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
