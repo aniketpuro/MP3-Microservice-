@@ -131,7 +131,25 @@ jobs:
           timeout: "10m"
 
       - name: Install Syft
-        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+        env:
+          SYFT_VERSION: v1.26.0
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Installing Syft (attempt ${attempt}/3)"
+            if curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+              | sh -s -- -b /usr/local/bin "${SYFT_VERSION}"; then
+              syft version
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+
+          echo "Primary Syft install path failed; trying direct release artifact..."
+          curl -sSfL "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz" -o syft.tar.gz
+          tar -xzf syft.tar.gz syft
+          install -m 0755 syft /usr/local/bin/syft
+          syft version
 
       - name: Generate SBOM
         run: |
