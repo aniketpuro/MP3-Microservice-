@@ -1,12 +1,10 @@
 # Stage 1: Build
+FROM python:3.12-alpine3.21 AS build
 
-FROM python:3.12-slim-bookworm AS build
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-    build-essential default-libmysqlclient-dev pkg-config
-
-RUN rm -rf /**var**/lib/apt/lists/*
+RUN apk add --no-cache \
+    build-base \
+    mariadb-connector-c-dev \
+    pkgconfig
 
 WORKDIR /app
 
@@ -20,14 +18,12 @@ COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r ./requirements.txt
 
 # Stage 2: Run
+FROM python:3.12-alpine3.21
 
-FROM python:3.12-slim-bookworm
-
-RUN apt-get update \
-&& apt-get install -y --no-install-recommends --no-install-suggests default-libmysqlclient-dev
+RUN apk add --no-cache mariadb-connector-c-dev
 
 # Create a non-root user
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
@@ -41,9 +37,9 @@ COPY . /app
 RUN chown -R appuser:appgroup /app
 
 # Don't produce .pyc files
-ENV PYTHONUNBUFFERED 1    
-# Don't buffer stdout and stderr
 ENV PYTHONDONTWRITEBYTECODE 1
+# Don't buffer stdout and stderr
+ENV PYTHONUNBUFFERED 1    
 
 # Switch to the non-root user
 USER appuser

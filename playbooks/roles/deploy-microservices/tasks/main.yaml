@@ -28,7 +28,7 @@
 
 - name: Deploy microservices (Auth, Notification, Converter, Gateway, Frontend)
   shell: |
-    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
+    kubectl apply -k {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
   loop:
     - auth
     - notification
