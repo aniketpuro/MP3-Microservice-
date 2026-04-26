@@ -2,11 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - frontend-deploy.yaml
-  - frontend-service.yaml
-  - frontend-hpa.yaml
+- frontend-deploy.yaml
+- frontend-service.yaml
+- frontend-hpa.yaml
 
 images:
-  - name: aniketpuro/frontend-service
-    newName: aniketpuro/frontend-service
-    newTag: latest
+- name: aniketpuro/frontend-service
+  newName: aniketpuro/frontend-service
+  newTag: 76a719e
