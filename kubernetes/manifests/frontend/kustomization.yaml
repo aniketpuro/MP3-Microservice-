@@ -5,6 +5,7 @@ resources:
 - frontend-deploy.yaml
 - frontend-service.yaml
 - frontend-hpa.yaml
+- frontend-ingress-aws.yaml
 
 images:
 - name: aniketpuro/frontend-service
