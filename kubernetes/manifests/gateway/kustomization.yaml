@@ -2,12 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - gateway-deploy.yaml
-  - gateway-service.yaml
-  - gateway-cm.yaml
-  - gateway-hpa.yaml
+- gateway-deploy.yaml
+- gateway-service.yaml
+- gateway-cm.yaml
+- gateway-hpa.yaml
 
 images:
-  - name: aniketpuro/gateway-service
-    newName: aniketpuro/gateway-service
-    newTag: latest
+- name: aniketpuro/gateway-service
+  newName: aniketpuro/gateway-service
+  newTag: 76a719e
