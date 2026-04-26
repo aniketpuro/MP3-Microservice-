@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - converter-deploy.yaml
   - converter-cm.yaml
-  - converter-vpa.yaml
 
 images:
   - name: aniketpuro/converter-service

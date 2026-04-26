@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - notification-deploy.yaml
   - notification-cm.yaml
-  - notification-vpa.yaml
 
 images:
   - name: aniketpuro/notification-service
