@@ -24,6 +24,7 @@ spec:
       containers:
       - name: notification
         image: aniketpuro/notification-microservices1:latest
+        imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false

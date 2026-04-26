@@ -5,6 +5,7 @@ metadata:
   labels:
     project: microservices_mp4-to-mp3-converter
 spec:
+  volumeName: mysql-pv
   storageClassName: manual
   accessModes:
     - ReadWriteOnce

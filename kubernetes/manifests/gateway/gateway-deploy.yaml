@@ -27,6 +27,7 @@ spec:
       containers:
         - name: gateway
           image: aniketpuro/gateway-microservices1:latest
+          imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false

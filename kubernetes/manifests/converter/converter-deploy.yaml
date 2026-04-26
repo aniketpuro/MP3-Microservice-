@@ -27,7 +27,8 @@ spec:
         fsGroup: 999
       containers:
         - name: converter
-          image: aniketpuro/converter-microservices1
+          image: aniketpuro/converter-microservices1:latest
+          imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false

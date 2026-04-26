@@ -6,6 +6,7 @@ metadata:
     db: mongodb
     project: microservices_mp4-to-mp3-converter
 spec:
+  volumeName: mongodb-pv
   storageClassName: manual
   accessModes:
     - ReadWriteOnce

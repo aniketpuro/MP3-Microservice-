@@ -20,11 +20,6 @@ spec:
         db: mongodb
         project: microservices_mp4-to-mp3-converter
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
       containers:
         - name: mongodb
           image: mongo:latest

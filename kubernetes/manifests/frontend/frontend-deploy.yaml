@@ -27,6 +27,7 @@ spec:
       containers:
         - name: frontend
           image: aniketpuro/frontend-microservices1:latest
+          imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
