@@ -172,14 +172,15 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
-          echo "${COSIGN_PRIVATE_KEY}" > cosign.key
-          cosign sign --key cosign.key "${IMAGE_DIGEST}" --yes
+          COSIGN_KEY_PATH="$(mktemp)"
+          echo "${COSIGN_PRIVATE_KEY}" > "${COSIGN_KEY_PATH}"
+          cosign sign --key "${COSIGN_KEY_PATH}" "${IMAGE_DIGEST}" --yes
           if [ -f "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" ]; then
-            cosign attest --key cosign.key --predicate "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" --type spdxjson "${IMAGE_DIGEST}" --yes
+            cosign attest --key "${COSIGN_KEY_PATH}" --predicate "sbom-${SERVICE_NAME}-${COMMIT_SHA}.json" --type spdxjson "${IMAGE_DIGEST}" --yes
           else
             echo "SBOM file missing, skipping attestation"
           fi
-          rm -f cosign.key
+          rm -f "${COSIGN_KEY_PATH}"
 
       - name: Update Kustomize + Commit + Push (GitOps)
         if: github.event_name == 'push'
@@ -195,6 +196,8 @@ jobs:
 
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+            git reset --hard HEAD
+            git clean -fd
 
             git fetch origin main
             git checkout main
