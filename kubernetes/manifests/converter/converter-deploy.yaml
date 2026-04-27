@@ -11,9 +11,7 @@ spec:
     matchLabels:
       app: converter
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 4
+    type: Recreate
   template:
     metadata:
       labels:

@@ -11,9 +11,7 @@ spec:
     matchLabels:
       db: mongodb
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 3
+    type: Recreate
   template:
     metadata:
       labels:
@@ -32,11 +30,6 @@ spec:
       containers:
         - name: mongodb
           image: mongo:latest
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
           resources:
             requests:
               cpu: "50m"

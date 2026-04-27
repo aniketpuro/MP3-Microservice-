@@ -11,9 +11,7 @@ spec:
     matchLabels:
       app: gateway
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 3
+    type: Recreate
   template:
     metadata:
       labels:

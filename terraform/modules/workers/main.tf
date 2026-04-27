@@ -9,7 +9,8 @@ resource "aws_instance" "workers" {
   
   root_block_device {
     delete_on_termination = true
-    volume_size           = 8
+    volume_size           = 30
+    volume_type           = "gp3"
   }
 
   tags = {
