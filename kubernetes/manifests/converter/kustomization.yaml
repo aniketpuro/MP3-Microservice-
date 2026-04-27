@@ -2,10 +2,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - converter-deploy.yaml
-  - converter-cm.yaml
+- converter-deploy.yaml
+- converter-cm.yaml
 
 images:
-  - name: aniketpuro/converter-service
-    newName: aniketpuro/converter-service
-    newTag: latest
+- name: aniketpuro/converter-service
+  newName: aniketpuro/converter-service
+  newTag: 8c5e644
