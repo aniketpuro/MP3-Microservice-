@@ -8,4 +8,4 @@ resources:
 images:
 - name: aniketpuro/notification-service
   newName: aniketpuro/notification-service
-  newTag: 76a719e
+  newTag: 8c5e644
