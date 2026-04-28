@@ -10,4 +10,4 @@ resources:
 images:
 - name: aniketpuro/gateway-service
   newName: aniketpuro/gateway-service
-  newTag: 76a719e
+  newTag: 56a22b3
