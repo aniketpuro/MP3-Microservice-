@@ -11,4 +11,4 @@ resources:
 images:
 - name: aniketpuro/auth-service
   newName: aniketpuro/auth-service
-  newTag: 8c5e644
+  newTag: 56a22b3
