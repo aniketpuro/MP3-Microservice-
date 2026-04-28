@@ -8,4 +8,4 @@ resources:
 images:
 - name: aniketpuro/converter-service
   newName: aniketpuro/converter-service
-  newTag: 8c5e644
+  newTag: 56a22b3
