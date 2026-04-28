@@ -6,9 +6,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/aniketpuro/microservices-mp3-converter.git # Replace with your actual repo URL if different
+    repoURL: https://github.com/aniketpuro/MP3-Microservice-
     targetRevision: HEAD
     path: kubernetes/manifests
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: default

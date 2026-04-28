@@ -1,41 +1,43 @@
-- name: Clone git repository
+- name: Create argocd and monitoring namespaces
+  shell: |
+    kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Install ArgoCD (Server-side apply to avoid annotation limit)
+  shell: |
+    kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+- name: Add Prometheus Helm repo
+  shell: |
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+
+- name: Install Kube-Prometheus-Stack via Helm
+  shell: |
+    helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --namespace monitoring
+
+- name: Clone git repository (for manifests)
   ansible.builtin.git:
     repo: https://github.com/aniketpuro/MP3-Microservice-
     dest: "{{ ansible_facts['env']['HOME'] }}/MP3-Microservice-"
     clone: yes
     force: yes  
 
-- name: Create all sealed secrets
+- name: Apply Sealed Secrets (Manual step needed before GitOps can take over)
   shell: |
     kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/secrets/
 
-- name: Deploy rabbitmq, mysql, mongodb
+- name: Apply ArgoCD Application Manifest (The Heart of GitOps)
   shell: |
-    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
-  loop:
-    - rabbit
-    - mysql
-    - mongodb
+    kubectl apply -f {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/argocd-app.yaml
 
-# Wait logic important hai EKS ke liye
-- name: Wait for rabbitmq to be ready
-  shell: "kubectl wait --for=condition=ready pod -l app=rabbitmq --timeout=300s"
+- name: Wait for ArgoCD Application to start syncing
+  shell: "kubectl get application -n argocd mp3-converter-app"
+  register: app_status
+  until: app_status.rc == 0
+  retries: 5
+  delay: 10
 
-- name: Make video, mp3 queue in rabbitmq
-  shell: |
-    kubectl exec rabbitmq-0 -- rabbitmqadmin declare queue name=video durable=true
-    kubectl exec rabbitmq-0 -- rabbitmqadmin declare queue name=mp3 durable=true
-
-- name: Deploy microservices (Auth, Notification, Converter, Gateway, Frontend)
-  shell: |
-    kubectl apply -k {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/manifests/{{ item }}/
-  loop:
-    - auth
-    - notification
-    - converter
-    - gateway
-    - frontend
-
-- name: Congratulations
+- name: Deployment Success
   debug:
-    msg: "Microservices deployment complete on EKS! Repo: https://github.com/aniketpuro/MP3-Microservice-"
+    msg: "GitOps enabled! ArgoCD is now managing the deployment from GitHub."

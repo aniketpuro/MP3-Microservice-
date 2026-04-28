@@ -43,7 +43,7 @@
       "id": 3,
       "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
-        { "expr": "sum(rate(flask_http_request_duration_seconds_sum{status_code=~"5.."}[5m])) / sum(rate(flask_http_request_duration_seconds_count[5m])) * 100", "legendFormat": "5xx Error Rate", "refId": "A" }
+        { "expr": "sum(rate(flask_http_request_duration_seconds_sum{status_code=~'5..'}[5m])) / sum(rate(flask_http_request_duration_seconds_count[5m])) * 100", "legendFormat": "5xx Error Rate", "refId": "A" }
       ],
       "title": "Global 5xx Error Rate (%)",
       "type": "stat"
@@ -100,7 +100,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "id": 12,
       "targets": [
-        { "expr": "sum by (app, status_code) (rate(flask_http_request_duration_seconds_count{status_code=~"4..|5.."}[5m]))", "legendFormat": "{{app}} {{status_code}} Errors", "refId": "A" }
+        { "expr": "sum by (app, status_code) (rate(flask_http_request_duration_seconds_count{status_code=~'4..|5..'}[5m]))", "legendFormat": "{{app}} {{status_code}} Errors", "refId": "A" }
       ],
       "title": "Error Rates by Service & Status Code",
       "type": "timeseries"
@@ -147,7 +147,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "id": 31,
       "targets": [
-        { "expr": "sum by (severity) (trivy_vulnerabilities{severity=~"CRITICAL|HIGH"})", "legendFormat": "{{severity}} Vulnerabilities", "refId": "A" }
+        { "expr": "sum by (severity) (trivy_vulnerabilities{severity=~'CRITICAL|HIGH'})", "legendFormat": "{{severity}} Vulnerabilities", "refId": "A" }
       ],
       "title": "Trivy Critical/High Vulnerabilities Trend",
       "type": "timeseries"

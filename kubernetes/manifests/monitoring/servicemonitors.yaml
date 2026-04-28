@@ -2,26 +2,16 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: microservices-monitor
+  namespace: monitoring
   labels:
-    release: prometheus # Must match the release name of your prometheus stack
+    release: monitoring
 spec:
   selector:
-    matchLabels:
-      app: auth
+    matchExpressions:
+      - {key: app, operator: In, values: [gateway, auth, converter, notification, frontend]}
+  namespaceSelector:
+    any: true
   endpoints:
   - port: web
     path: /metrics
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: gateway-monitor
-  labels:
-    release: prometheus
-spec:
-  selector:
-    matchLabels:
-      app: gateway
-  endpoints:
-  - port: web
-    path: /metrics
+    interval: 15s

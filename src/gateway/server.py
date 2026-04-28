@@ -15,7 +15,7 @@ from bson.objectid import ObjectId
 
 server = Flask(__name__)
 Talisman(server, content_security_policy=None)
-metrics = PrometheusMetrics(server)
+metrics = PrometheusMetrics(server, path='/metrics')
 metrics.info('app_info', 'Gateway Service', version='1.0.0')
 CORS(server)
 
