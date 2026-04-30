@@ -1,0 +1,18 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+grafana:
+  enabled: true
+  adminPassword: "admin" # Fixed password: admin
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      url: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+      access: proxy
+      isDefault: true
+  persistence:
+    enabled: true
+    size: 10Gi
