@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expert-monitoring-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    project: microservices-mp3
+data:
+  expert-dashboard.json: |
+    {
+      "title": "EXPERT K8S MONITORING (MASTER LIST)",
+      "panels": [
+        { "title": "Node Status (Ready vs Not-Ready)", "type": "stat", "targets": [{ "expr": "sum(kube_node_status_condition{condition='Ready',status='true'})" }] },
+        { "title": "Cluster Memory Saturation (%)", "type": "gauge", "targets": [{ "expr": "sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes) * 100" }] },
+        { "title": "Golden Signal: 5xx Error Rate", "type": "timeseries", "targets": [{ "expr": "sum(rate(flask_http_request_duration_seconds_count{status_code=~'5..'}[5m])) / sum(rate(flask_http_request_duration_seconds_count[5m])) * 100" }] },
+        { "title": "Pod Restart Loop (CrashLoop Detection)", "type": "table", "targets": [{ "expr": "sum by (pod) (kube_pod_container_status_restarts_total) > 0" }] },
+        { "title": "HPA Scaling Activity", "type": "timeseries", "targets": [{ "expr": "kube_horizontalpodautoscaler_status_current_replicas" }] }
+      ]
+    }
