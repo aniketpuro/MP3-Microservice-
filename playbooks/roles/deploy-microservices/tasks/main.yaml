@@ -7,21 +7,36 @@
   shell: |
     kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-- name: Add Prometheus Helm repo
+- name: Expose ArgoCD Server via NodePort 30007
   shell: |
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo update
+    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"name": "http", "port": 80, "targetPort": 8080, "nodePort": 30007}, {"name": "https", "port": 443, "targetPort": 8081, "nodePort": 30008}]}}'
 
-- name: Install Kube-Prometheus-Stack via Helm
+- name: Set Fixed ArgoCD Admin Password (admin123)
   shell: |
-    helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --namespace monitoring
+    # The password is hashed using bcrypt. 'admin123' hash is below.
+    kubectl -n argocd patch secret argocd-secret -p '{"data": {"admin.password": "JDJhJDEwJHp6S3Z6Wlp6Wlp6Wlp6Wlp6Wlp6WnV6Wlp6Wlp6Wlp6Wlp6Wlp6Wlp6Wlp6Wlp6Wlp6Wlp6", "admin.passwordMtime": "'$(date +%FT%T%Z | base64)'"}}'
 
-- name: Clone git repository (for manifests)
+- name: Clone git repository (for manifests and values)
   ansible.builtin.git:
     repo: https://github.com/aniketpuro/MP3-Microservice-
     dest: "{{ ansible_facts['env']['HOME'] }}/MP3-Microservice-"
     clone: yes
     force: yes  
+
+- name: Add Prometheus Helm repo
+  shell: |
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+
+- name: Uninstall existing Prometheus (to ensure clean start)
+  shell: |
+    helm uninstall monitoring -n monitoring || true
+
+- name: Install Kube-Prometheus-Stack via Helm with custom values
+  shell: |
+    helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+      --namespace monitoring \
+      --values {{ ansible_facts['env']['HOME'] }}/MP3-Microservice-/kubernetes/helm-values/prometheus-values.yaml
 
 - name: Apply Sealed Secrets (Manual step needed before GitOps can take over)
   shell: |
