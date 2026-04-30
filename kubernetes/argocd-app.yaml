@@ -11,6 +11,7 @@ spec:
     path: kubernetes/manifests
     directory:
       recurse: true
+      exclude: '{**/kustomization.yaml,**/kustomization.yml,**/kyverno-policies.yaml,kubernetes/helm-values/**}'
   destination:
     server: https://kubernetes.default.svc
     namespace: default
