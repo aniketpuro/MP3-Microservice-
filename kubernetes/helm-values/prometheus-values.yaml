@@ -30,8 +30,10 @@ grafana:
       label: grafana_dashboard
       env:
         VERIFY_SSL: "false"
+        SC_HEALTHZ_PORT: "8081"
     datasources:
       enabled: true
       label: grafana_datasource
       env:
         VERIFY_SSL: "false"
+        SC_HEALTHZ_PORT: "8082"
