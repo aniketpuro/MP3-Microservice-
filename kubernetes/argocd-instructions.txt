@@ -1,8 +1,14 @@
 # Step 1: Create Namespace
 # kubectl create namespace argocd
 
-# Step 2: Install ArgoCD
+# Step 2: Install ArgoCD (Official Manifests)
 # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-# Step 3: Apply the Application manifest
+# Step 3: Apply the Declarative Configuration for Subpath Routing (/argocd)
+# kubectl apply -f kubernetes/manifests/argocd-config.yaml
+
+# Step 4: Restart ArgoCD Server to pick up configuration
+# kubectl rollout restart deployment argocd-server -n argocd
+
+# Step 5: Apply the Application manifest (GitOps Sync)
 # kubectl apply -f kubernetes/argocd-app.yaml

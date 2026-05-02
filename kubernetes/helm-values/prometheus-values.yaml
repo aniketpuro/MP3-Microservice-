@@ -7,6 +7,10 @@ prometheus:
 grafana:
   enabled: true
   adminPassword: "admin" # Fixed password: admin
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana/"
+      serve_from_sub_path: true
   additionalDataSources:
     - name: Prometheus
       type: prometheus
