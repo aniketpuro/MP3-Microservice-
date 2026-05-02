@@ -5,8 +5,9 @@ metadata:
   namespace: default
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Removing rewrite-target because basehref handles the subpath logic
 spec:
-  ingressClassName: public
+  ingressClassName: nginx
   rules:
   - http:
       paths:

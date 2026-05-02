@@ -24,3 +24,14 @@ grafana:
   persistence:
     enabled: true
     size: 10Gi
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      env:
+        VERIFY_SSL: "false"
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      env:
+        VERIFY_SSL: "false"
