@@ -7,8 +7,30 @@ metadata:
     app.kubernetes.io/name: argocd-cmd-params-cm
     app.kubernetes.io/part-of: argocd
 data:
-  # The subpath where ArgoCD is hosted. Crucial for proper UI asset loading.
   server.basehref: /argocd/
   server.rootpath: /argocd
-  # Required if terminating TLS at the Ingress (standard practice)
   server.insecure: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Enable anonymous access
+  users.anonymous.enabled: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Grant admin permissions to anonymous users
+  policy.default: role:admin
